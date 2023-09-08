@@ -2,7 +2,7 @@
 
 namespace MergeSort
 {
-    static class Program
+    class Program
     {
         static void Main(string[] args)
         {
@@ -11,23 +11,16 @@ namespace MergeSort
 
             int[] largeData = GenerateLargeData(100000000);
             stopwatch.Stop();
-            Console.WriteLine($"Data generation took:{stopwatch.ElapsedMilliseconds} ms");
+            Console.WriteLine($"Data generation took: {stopwatch.ElapsedMilliseconds} ms");
             stopwatch.Reset();
 
-            // foreach (int num in largeData)
-            // {
-            //     Console.Write(num + " ");
-            // }
+            int numCores = Environment.ProcessorCount;
+            Console.WriteLine($"Number of available cores: {numCores}");
 
             stopwatch.Start();
-            int[] sortedData = MergeSort(largeData);
+            int[] sortedData = FullParallelMergeSort(largeData, numCores);
             stopwatch.Stop();
-            Console.WriteLine($"Data sorting took:{stopwatch.ElapsedMilliseconds} ms");
-
-            // foreach (int num in sortedData)
-            // {
-            //     Console.Write(num + " ");
-            // }
+            Console.WriteLine($"Data sorting took: {stopwatch.ElapsedMilliseconds} ms");
         }
 
         static int[] Merge(int[] left, int[] right)
@@ -58,6 +51,48 @@ namespace MergeSort
             }
 
             return result;
+        }
+
+        static int[] FullParallelMergeSort(int[] arr, int numCores)
+        {
+            if (arr.Length <= 1 || numCores <= 1)
+            {
+                Console.WriteLine("Falling back to sequential sort");
+                return MergeSort(arr);
+            }
+
+            int segmentSize = arr.Length / numCores;
+            int[] sortedData = new int[arr.Length];
+
+            Parallel.For(0, numCores, i =>
+            {
+                int start = i * segmentSize;
+                int end = (i == numCores - 1) ? arr.Length : start + segmentSize;
+                int[] segment = new int[end - start];
+                Array.Copy(arr, start, segment, 0, end - start);
+                int[] sortedSegment = MergeSort(segment);
+                Array.Copy(sortedSegment, 0, sortedData, start, sortedSegment.Length);
+            });
+
+            while (segmentSize < arr.Length)
+            {
+                Parallel.For(0, arr.Length / (2 * segmentSize), i =>
+                {
+                    int start = i * 2 * segmentSize;
+                    int mid = start + segmentSize;
+                    int end = Math.Min(start + 2 * segmentSize, arr.Length);
+                    int[] left = new int[mid - start];
+                    int[] right = new int[end - mid];
+                    Array.Copy(sortedData, start, left, 0, left.Length);
+                    Array.Copy(sortedData, mid, right, 0, right.Length);
+                    int[] merged = Merge(left, right);
+                    Array.Copy(merged, 0, sortedData, start, merged.Length);
+                });
+
+                segmentSize *= 2;
+            }
+
+            return sortedData;
         }
 
         static int[] MergeSort(int[] arr)

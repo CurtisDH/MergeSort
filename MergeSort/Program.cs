@@ -1,26 +1,33 @@
-﻿namespace MergeSort
+﻿using System.Diagnostics;
+
+namespace MergeSort
 {
     static class Program
     {
         static void Main(string[] args)
         {
-            int[] largeData = GenerateLargeData(10);
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
 
-            Console.WriteLine("UNSORTED: ARRAY:");
-            foreach (int num in largeData)
-            {
-                Console.Write(num + " ");
-            }
+            int[] largeData = GenerateLargeData(100000000);
+            stopwatch.Stop();
+            Console.WriteLine($"Data generation took:{stopwatch.ElapsedMilliseconds} ms");
+            stopwatch.Reset();
 
-            Console.WriteLine("########");
-            Console.WriteLine("########");
+            // foreach (int num in largeData)
+            // {
+            //     Console.Write(num + " ");
+            // }
+
+            stopwatch.Start();
             int[] sortedData = MergeSort(largeData);
+            stopwatch.Stop();
+            Console.WriteLine($"Data sorting took:{stopwatch.ElapsedMilliseconds} ms");
 
-            Console.WriteLine("SORTED ARRAY:");
-            foreach (int num in sortedData)
-            {
-                Console.Write(num + " ");
-            }
+            // foreach (int num in sortedData)
+            // {
+            //     Console.Write(num + " ");
+            // }
         }
 
         static int[] Merge(int[] left, int[] right)

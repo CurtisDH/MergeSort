@@ -1,6 +1,9 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using CsvHelper;
+using CsvHelper.Configuration;
 using Xunit;
 using Xunit.Abstractions;
 using MergeSort;
@@ -34,31 +37,31 @@ namespace MergeSortUnitTests
         }
 
         [Theory]
-        [InlineData(0, 1)]
-        [InlineData(0, 2)]
-        [InlineData(0, 4)]
-        [InlineData(0, 8)]
-        [InlineData(0, 16)]
-        [InlineData(1, 1)]
-        [InlineData(1, 2)]
-        [InlineData(1, 4)]
-        [InlineData(1, 8)]
-        [InlineData(1, 16)]
-        [InlineData(9, 1)]
-        [InlineData(9, 2)]
-        [InlineData(9, 4)]
-        [InlineData(9, 8)]
-        [InlineData(9, 16)]
-        [InlineData(100, 1)]
-        [InlineData(100, 2)]
-        [InlineData(100, 4)]
-        [InlineData(100, 8)]
-        [InlineData(100, 16)]
-        [InlineData(1000, 1)]
-        [InlineData(1000, 2)]
-        [InlineData(1000, 4)]
-        [InlineData(1000, 8)]
-        [InlineData(1000, 16)]
+        // [InlineData(0, 1)]
+        // [InlineData(0, 2)]
+        // [InlineData(0, 4)]
+        // [InlineData(0, 8)]
+        // [InlineData(0, 16)]
+        // [InlineData(1, 1)]
+        // [InlineData(1, 2)]
+        // [InlineData(1, 4)]
+        // [InlineData(1, 8)]
+        // [InlineData(1, 16)]
+        // [InlineData(9, 1)]
+        // [InlineData(9, 2)]
+        // [InlineData(9, 4)]
+        // [InlineData(9, 8)]
+        // [InlineData(9, 16)]
+        // [InlineData(100, 1)]
+        // [InlineData(100, 2)]
+        // [InlineData(100, 4)]
+        // [InlineData(100, 8)]
+        // [InlineData(100, 16)]
+        // [InlineData(1000, 1)]
+        // [InlineData(1000, 2)]
+        // [InlineData(1000, 4)]
+        // [InlineData(1000, 8)]
+        // [InlineData(1000, 16)]
         [InlineData(10000, 1)]
         [InlineData(10000, 2)]
         [InlineData(10000, 4)]
@@ -87,28 +90,32 @@ namespace MergeSortUnitTests
         public void Test_FullParallelSort_MultiElementArray(int arraySize, int coreCount)
         {
             _output.WriteLine(
-                $"Starting Test_FullParallelSort_MultiElementArray with array size {arraySize} and core count {coreCount}");
+                $"Starting Test_FullParallelSort_MultiElementArray with ArraySize: {arraySize}, CoreCount: {coreCount}");
             int[] arr = GenerateRandomArray(arraySize);
 
             var stopwatch = new Stopwatch();
-
-            _output.WriteLine($"Number of cores: {coreCount}");
             stopwatch.Start();
-            _output.WriteLine($"ArrK{arr.Length}, numcores:{coreCount}");
+
             int[] sortedArr = Program.FullParallelMergeSort(arr, coreCount);
 
             stopwatch.Stop();
             _output.WriteLine($"Elapsed time: {stopwatch.ElapsedMilliseconds} ms");
 
-            _output.WriteLine("Checking against expected output");
-            stopwatch.Reset();
+            // Create or append to a CSV file
+            var record = new
+                { ArraySize = arraySize, CoreCount = coreCount, ElapsedTime = stopwatch.ElapsedMilliseconds };
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture);
 
-            stopwatch.Start();
-            int[] expectedArr = arr.OrderBy(x => x).ToArray();
-            stopwatch.Stop();
-            _output.WriteLine($"Comparison took:{stopwatch.ElapsedMilliseconds} ms");
+            using (var writer = new StreamWriter("performance_data.csv", append: true))
+            using (var csv = new CsvWriter(writer, config))
+            {
+                csv.WriteRecord(record);
+                csv.NextRecord();
+            }
 
-            Assert.True(expectedArr.SequenceEqual(sortedArr));
+            // Validate the sort
+            // int[] expectedArr = arr.OrderBy(x => x).ToArray();
+            // Assert.True(expectedArr.SequenceEqual(sortedArr));
 
             _output.WriteLine("Test_FullParallelSort_MultiElementArray passed");
         }

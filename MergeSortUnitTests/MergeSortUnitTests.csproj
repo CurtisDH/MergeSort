@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="30.0.1" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0-preview.7.23375.6" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0-preview.7.23375.6" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />

@@ -116,19 +116,29 @@ namespace MergeSortUnitTests
         {
             _output.WriteLine(
                 $"Starting Test_FullParallelSort_MultiElementArray with ArraySize: {arraySize}, CoreCount: {coreCount}");
+
+            int iterations = 10;
+            double totalElapsedTime = 0;
             int[] arr = GenerateRandomArray(arraySize);
 
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
+            for (int i = 0; i < iterations; i++)
+            {
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
 
-            int[] sortedArr = Program.FullParallelMergeSort(arr, coreCount);
+                int[] sortedArr = Program.FullParallelMergeSort(arr, coreCount);
 
-            stopwatch.Stop();
-            _output.WriteLine($"Elapsed time: {stopwatch.ElapsedMilliseconds} ms");
+                stopwatch.Stop();
+                totalElapsedTime += stopwatch.ElapsedMilliseconds;
 
-            // Create or append to a CSV file
-            var record = new
-                { ArraySize = arraySize, CoreCount = coreCount, ElapsedTime = stopwatch.ElapsedMilliseconds };
+                _output.WriteLine($"Iteration {i + 1} - Elapsed time: {stopwatch.ElapsedMilliseconds} ms");
+            }
+
+            double averageTime = totalElapsedTime / iterations;
+            _output.WriteLine($"Average elapsed time for {iterations} iterations: {averageTime} ms");
+
+            // Record the average time in the CSV
+            var record = new { ArraySize = arraySize, CoreCount = coreCount, AverageElapsedTime = averageTime };
             var config = new CsvConfiguration(CultureInfo.InvariantCulture);
 
             using (var writer = new StreamWriter("performance_data.csv", append: true))
@@ -137,10 +147,6 @@ namespace MergeSortUnitTests
                 csv.WriteRecord(record);
                 csv.NextRecord();
             }
-
-            // Validate the sort
-            // int[] expectedArr = arr.OrderBy(x => x).ToArray();
-            // Assert.True(expectedArr.SequenceEqual(sortedArr));
 
             _output.WriteLine("Test_FullParallelSort_MultiElementArray passed");
         }

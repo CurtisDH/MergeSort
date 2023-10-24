@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -57,43 +58,56 @@ namespace MergeSort
 
         public static int[] FullParallelMergeSort(int[] arr, int numCores)
         {
-            if (arr.Length <= 1 || numCores <= 1)
+            if (arr.Length <= 1)
+            {
+                return arr; // No need to sort a single-element array
+            }
+
+            if (numCores <= 1 || arr.Length < numCores)
             {
                 Console.WriteLine("Falling back to sequential sort");
-                return MergeSort(arr);
+                return MergeSort(arr); 
             }
+            
+            // C# Parallel For handles thread distribution allowing for more granular tasks
+            int taskCount = numCores * 2; 
+            ConcurrentBag<int[]> sortedBags = new ConcurrentBag<int[]>();
 
-            if (arr.Length < numCores)
+            Parallel.For(0, taskCount, (i) =>
             {
-                // Fallback so we don't div by 0.
-                numCores = arr.Length;
-            }
-
-            int segmentSize = arr.Length / numCores;
-            int[] sortedData = new int[arr.Length];
-
-            Parallel.For(0, numCores, i =>
-            {
+                int segmentSize = arr.Length / taskCount;
                 int start = i * segmentSize;
-                int end = (i == numCores - 1) ? arr.Length : start + segmentSize;
+                int end = (i == taskCount - 1) ? arr.Length : start + segmentSize;
                 int[] segment = new int[end - start];
-                Array.Copy(arr, start, segment, 0, end - start);
+                Array.Copy(arr, start, segment, 0, segment.Length);
+
                 int[] sortedSegment = MergeSort(segment);
-                Array.Copy(sortedSegment, 0, sortedData, start, sortedSegment.Length);
+                sortedBags.Add(sortedSegment);
             });
 
-            // Sequentially merge the sorted segments
-            int[] result = new int[0];
-            for (int i = 0; i < numCores; i++)
+            while (sortedBags.Count > 1)
             {
-                int start = i * segmentSize;
-                int end = (i == numCores - 1) ? arr.Length : start + segmentSize;
-                int[] segment = new int[end - start];
-                Array.Copy(sortedData, start, segment, 0, end - start);
-                result = Merge(result, segment);
+                ConcurrentBag<int[]> newBags = new ConcurrentBag<int[]>();
+
+                var pairs = sortedBags.ToArray().Select((item, index) => new { item, index })
+                    .GroupBy(x => x.index / 2)
+                    .Select(g => g.Select(x => x.item).ToArray());
+
+                Parallel.ForEach(pairs, pair =>
+                {
+                    if (pair.Length == 2)
+                    {
+                        newBags.Add(Merge(pair[0], pair[1]));
+                    }
+                    else
+                    {
+                        newBags.Add(pair[0]);
+                    }
+                });
+                sortedBags = newBags;
             }
 
-            return result;
+            return sortedBags.Single();
         }
 
 

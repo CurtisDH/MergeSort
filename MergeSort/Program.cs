@@ -23,7 +23,17 @@ namespace MergeSort
             stopwatch.Start();
             int[] sortedData = FullParallelMergeSort(largeData, numCores);
             stopwatch.Stop();
-            Console.WriteLine($"Data sorting took: {stopwatch.ElapsedMilliseconds} ms");
+            Console.WriteLine($"FullParallelMergeSort sorting took: {stopwatch.ElapsedMilliseconds} ms");
+
+            stopwatch.Start();
+            int[] sortedData1 = ImplicitParallelMergeSort(largeData);
+            stopwatch.Stop();
+            Console.WriteLine($"ImplicitParallelMergeSort sorting took: {stopwatch.ElapsedMilliseconds} ms");
+            
+            stopwatch.Start();
+            int[] sortedData2 = TaskBasedMergeSort(largeData);
+            stopwatch.Stop();
+            Console.WriteLine($"TaskBasedMergeSort sorting took: {stopwatch.ElapsedMilliseconds} ms");
         }
 
         public static int[] Merge(int[] left, int[] right)
@@ -66,11 +76,11 @@ namespace MergeSort
             if (numCores <= 1 || arr.Length < numCores)
             {
                 Console.WriteLine("Falling back to sequential sort");
-                return MergeSort(arr); 
+                return MergeSort(arr);
             }
-            
+
             // C# Parallel For handles thread distribution allowing for more granular tasks
-            int taskCount = numCores * 2; 
+            int taskCount = numCores * 2;
             ConcurrentBag<int[]> sortedBags = new ConcurrentBag<int[]>();
 
             Parallel.For(0, taskCount, (i) =>
@@ -108,6 +118,49 @@ namespace MergeSort
             }
 
             return sortedBags.Single();
+        }
+
+        public static int[] ImplicitParallelMergeSort(int[] arr)
+        {
+            if (arr.Length <= 1)
+            {
+                return arr;
+            }
+
+            int mid = arr.Length / 2;
+            int[] left = new int[mid];
+            int[] right = new int[arr.Length - mid];
+
+            Array.Copy(arr, 0, left, 0, mid);
+            Array.Copy(arr, mid, right, 0, arr.Length - mid);
+
+            Parallel.Invoke(() => left = ImplicitParallelMergeSort(left),
+                () => right = ImplicitParallelMergeSort(right));
+
+            return Merge(left, right);
+        }
+
+
+        public static int[] TaskBasedMergeSort(int[] arr)
+        {
+            if (arr.Length <= 1)
+            {
+                return arr;
+            }
+
+            int mid = arr.Length / 2;
+            int[] left = new int[mid];
+            int[] right = new int[arr.Length - mid];
+
+            Array.Copy(arr, 0, left, 0, mid);
+            Array.Copy(arr, mid, right, 0, arr.Length - mid);
+
+            // Using Task to manage the parallelism
+            var leftTask = Task.Run(() => TaskBasedMergeSort(left));
+            var rightTask = Task.Run(() => TaskBasedMergeSort(right));
+
+            Task.WaitAll(leftTask, rightTask);
+            return Merge(leftTask.Result, rightTask.Result);
         }
 
 

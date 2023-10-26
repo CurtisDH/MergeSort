@@ -185,16 +185,16 @@ namespace MergeSortUnitTests
         [InlineData(10000000, 4)]
         [InlineData(10000000, 8)]
         [InlineData(10000000, 16)]
-        // [InlineData(100000000, 1)]
-        // [InlineData(100000000, 2)]
-        // [InlineData(100000000, 4)]
-        // [InlineData(100000000, 8)]
-        // [InlineData(100000000, 16)]
-        // [InlineData(200000000, 1)]
-        // [InlineData(200000000, 2)]
-        // [InlineData(200000000, 4)]
-        // [InlineData(200000000, 8)]
-        // [InlineData(200000000, 16)]
+        [InlineData(100000000, 1)]
+        [InlineData(100000000, 2)]
+        [InlineData(100000000, 4)]
+        [InlineData(100000000, 8)]
+        [InlineData(100000000, 16)]
+        [InlineData(200000000, 1)]
+        [InlineData(200000000, 2)]
+        [InlineData(200000000, 4)]
+        [InlineData(200000000, 8)]
+        [InlineData(200000000, 16)]
         public void Test_HighLevelFullParallel_MultiElementArray(int arraySize, int coreCount)
         {
             int[] arr = GenerateRandomArray(arraySize);
@@ -232,23 +232,23 @@ namespace MergeSortUnitTests
         [InlineData(10000000, 4)]
         [InlineData(10000000, 8)]
         [InlineData(10000000, 16)]
-        // [InlineData(100000000, 1)]
-        // [InlineData(100000000, 2)]
-        // [InlineData(100000000, 4)]
-        // [InlineData(100000000, 8)]
-        // [InlineData(100000000, 16)]
-        // [InlineData(200000000, 1)]
-        // [InlineData(200000000, 2)]
-        // [InlineData(200000000, 4)]
-        // [InlineData(200000000, 8)]
-        // [InlineData(200000000, 16)]
+        [InlineData(100000000, 1)]
+        [InlineData(100000000, 2)]
+        [InlineData(100000000, 4)]
+        [InlineData(100000000, 8)]
+        [InlineData(100000000, 16)]
+        [InlineData(200000000, 1)]
+        [InlineData(200000000, 2)]
+        [InlineData(200000000, 4)]
+        [InlineData(200000000, 8)]
+        [InlineData(200000000, 16)]
         public void Test_MergeSortWithThreadPool_MultiElementArray(int arraySize, int coreCount)
         {
             int[] arr = GenerateRandomArray(arraySize);
             RunTestAndRecord("MergeSortWithThreadPool", arr, coreCount,
                 MergeSortWithThreadPool.FullParallelMergeSortWithThreadPool);
         }
-
+        
         private bool IsSorted(int[] arr)
         {
             for (int i = 1; i < arr.Length; i++)
@@ -258,8 +258,10 @@ namespace MergeSortUnitTests
                     return false;
                 }
             }
-
             return true;
         }
+
     }
+    
+    
 }
